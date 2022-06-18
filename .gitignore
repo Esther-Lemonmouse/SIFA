@@ -155,7 +155,6 @@ cython_debug/
 # 因为.pth通常都太大了，所以我不打算用git来做版本控制，直接远程和本地进行推送就可以了
 *.pth
 # 数据集太大了，放数据集的文件夹不同步了
-data/training_ct/
-data/training_mr/
-data/validation_ct/
-data/validation_mr/
+data/*
+# 输出结果很大，可以不同步
+output/*
