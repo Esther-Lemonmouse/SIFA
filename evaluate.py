@@ -9,27 +9,32 @@ import tensorflow as tf
 import model
 from stats_func import *
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0' # in local file, this is not useful
 
-CHECKPOINT_PATH = '' # model path
+CHECKPOINT_PATH = './output/20220705-173441/sifa-9999' # model path
 BASE_FID = '' # folder path of test files
-TESTFILE_FID = '' # path of the .txt file storing the test filenames
+TESTFILE_FID = './data/datalist/test_ct_A.txt' # path of the .txt file storing the test filenames
 TEST_MODALITY = 'CT'
-USE_newstat = True
+USE_newstat = True     # 默认是True
 KEEP_RATE = 1.0
 IS_TRAINING = False
-BATCH_SIZE = 128
+BATCH_SIZE = 32 # 默认是128
 
 data_size = [256, 256, 1]
 label_size = [256, 256, 1]
 
 contour_map = {
-    "bg": 0,
-    "la_myo": 1,
-    "la_blood": 2,
-    "lv_blood": 3,
-    "aa": 4,
-}
+    'bg': 0,
+    'prostate': 1,
+    }
+
+# contour_map = {
+#     "bg": 0,
+#     "la_myo": 1,
+#     "la_blood": 2,
+#     "lv_blood": 3,
+#     "aa": 4,
+# }
 
 
 class SIFA:
@@ -47,7 +52,8 @@ class SIFA:
         self._num_cls = int(config['num_cls'])
 
         self.base_fd = BASE_FID
-        self.test_fid = BASE_FID + '/' + TESTFILE_FID
+        # self.test_fid = BASE_FID + '/' + TESTFILE_FID
+        self.test_fid = TESTFILE_FID
 
     def model_setup(self):
 
@@ -158,7 +164,7 @@ class SIFA:
 
                 # This is to make the orientation of test data match with the training data
                 # Set to False if the orientation of test data has already been aligned with the training data
-                if True:
+                if True:  # 默认是true
                     data = np.flip(data, axis=0)
                     data = np.flip(data, axis=1)
                     label = np.flip(label, axis=0)
@@ -171,17 +177,20 @@ class SIFA:
                     data_batch = np.zeros([self.batch_size, data_size[0], data_size[1], data_size[2]])
                     label_batch = np.zeros([self.batch_size, label_size[0], label_size[1]])
                     for idx, jj in enumerate(frame_list[ii * self.batch_size: (ii + 1) * self.batch_size]):
-                        data_batch[idx, ...] = np.expand_dims(data[..., jj].copy(), 3)
+                        data_batch[idx, ...] = np.expand_dims(data[..., jj].copy(), 2)  ###3改成2
                         label_batch[idx, ...] = label[..., jj].copy()
                     label_batch = self.label_decomp(label_batch)
+                    # prostate 数据集：B(mr关键字){-2.5, 4.5}, A(ct关键字){-2.4, 5.5}
                     if TEST_MODALITY=='CT':
                         if USE_newstat:
-                            data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -2.8), np.subtract(3.2, -2.8)), 2.0),1) # {-2.8, 3.2} need to be changed according to the data statistics
+                            data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -2.4), np.subtract(5.5, -2.4)), 2.0), 1)
+                            # data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -2.8), np.subtract(3.2, -2.8)), 2.0),1) # {-2.8, 3.2} need to be changed according to the data statistics
                         else:
                             data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -1.9), np.subtract(3.0, -1.9)), 2.0),1) # {-1.9, 3.0} need to be changed according to the data statistics
                             
                     elif TEST_MODALITY=='MR':
-                        data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -1.8), np.subtract(4.4, -1.8)), 2.0),1)  # {-1.8, 4.4} need to be changed according to the data statistics
+                        data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -2.5), np.subtract(4.5, -2.5)), 2.0), 1)  # {-2.8, 3.2} need to be changed according to the data statistics
+                        # data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -1.8), np.subtract(4.4, -1.8)), 2.0),1)  # {-1.8, 4.4} need to be changed according to the data statistics
 
                     compact_pred_b_val = sess.run(self.compact_pred_b, feed_dict={self.input_b: data_batch, self.gt_b: label_batch})
 
@@ -198,29 +207,32 @@ class SIFA:
                     dice_list.append(mmb.dc(pred_test_data_tr, pred_gt_data_tr))
                     assd_list.append(mmb.assd(pred_test_data_tr, pred_gt_data_tr))
 
-            dice_arr = 100 * np.reshape(dice_list, [4, -1]).transpose()
+            # dice_arr = 100 * np.reshape(dice_list, [4, -1]).transpose()
+            dice_arr = 100 * np.reshape(dice_list, [1, -1]).transpose() # prostate 共两类
 
             dice_mean = np.mean(dice_arr, axis=1)
             dice_std = np.std(dice_arr, axis=1)
 
-            print 'Dice:'
-            print 'AA :%.1f(%.1f)' % (dice_mean[3], dice_std[3])
-            print 'LAC:%.1f(%.1f)' % (dice_mean[1], dice_std[1])
-            print 'LVC:%.1f(%.1f)' % (dice_mean[2], dice_std[2])
-            print 'Myo:%.1f(%.1f)' % (dice_mean[0], dice_std[0])
-            print 'Mean:%.1f' % np.mean(dice_mean)
+            print('Dice:')
+            print('Prostate:%.1f(%.1f)' % (dice_mean[0], dice_std[0]))
+            # print('AA :%.1f(%.1f)' % (dice_mean[3], dice_std[3]))
+            # print('LAC:%.1f(%.1f)' % (dice_mean[1], dice_std[1]))
+            # print('LVC:%.1f(%.1f)' % (dice_mean[2], dice_std[2]))
+            # print('Myo:%.1f(%.1f)' % (dice_mean[0], dice_std[0]))
+            print('Mean:%.1f' % np.mean(dice_mean))
 
-            assd_arr = np.reshape(assd_list, [4, -1]).transpose()
+            # assd_arr = np.reshape(assd_list, [4, -1]).transpose()
+            assd_arr = np.reshape(assd_list, [1, -1]).transpose()   # prostate 共两类
 
             assd_mean = np.mean(assd_arr, axis=1)
             assd_std = np.std(assd_arr, axis=1)
 
-            print 'ASSD:'
-            print 'AA :%.1f(%.1f)' % (assd_mean[3], assd_std[3])
-            print 'LAC:%.1f(%.1f)' % (assd_mean[1], assd_std[1])
-            print 'LVC:%.1f(%.1f)' % (assd_mean[2], assd_std[2])
-            print 'Myo:%.1f(%.1f)' % (assd_mean[0], assd_std[0])
-            print 'Mean:%.1f' % np.mean(assd_mean)
+            print('ASSD:')
+            # print('AA :%.1f(%.1f)' % (assd_mean[3], assd_std[3]))
+            # print('LAC:%.1f(%.1f)' % (assd_mean[1], assd_std[1]))
+            # print('LVC:%.1f(%.1f)' % (assd_mean[2], assd_std[2]))
+            # print('Myo:%.1f(%.1f)' % (assd_mean[0], assd_std[0]))
+            print('Mean:%.1f' % np.mean(assd_mean))
 
 
 def main(config_filename):

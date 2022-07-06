@@ -28,7 +28,8 @@ def _softmax_weighted_loss(logits, gt):
     Calculate weighted cross-entropy loss.
     """
     softmaxpred = tf.nn.softmax(logits)
-    for i in xrange(5):
+    #for i in range(5):
+    for i in range(2):  # prostate两类
         gti = gt[:,:,:,i]
         predi = softmaxpred[:,:,:,i]
         weighted = 1-(tf.reduce_sum(gti) / tf.reduce_sum(gt))
@@ -49,7 +50,8 @@ def _dice_loss_fun(logits, gt):
     dice = 0
     eps = 1e-7
     softmaxpred = tf.nn.softmax(logits)
-    for i in xrange(5):
+    # for i in range(5):
+    for i in range(2):  # prostate两类
         inse = tf.reduce_sum(softmaxpred[:, :, :, i]*gt[:, :, :, i])
         l = tf.reduce_sum(softmaxpred[:, :, :, i]*softmaxpred[:, :, :, i])
         r = tf.reduce_sum(gt[:, :, :, i])

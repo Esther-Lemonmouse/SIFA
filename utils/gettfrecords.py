@@ -3,9 +3,9 @@ import os
 import tensorflow as tf
 
 
-def npz2tfrecords():
-    image_pth = './example data/image_01.npz'
-    tfrecord_pth = './example data/image_01.tfrecords'
+def npz2tfrecords(image_pth, tfrecord_pth):
+    # image_pth = './example data/image_01.npz'
+    # tfrecord_pth = './example data/image_01.tfrecords'
 
     npz_data = np.load(image_pth)
     data_vol_val = npz_data['arr_0']
@@ -36,5 +36,14 @@ def npz2tfrecords():
 
 
 if __name__=='__main__':
-    npz2tfrecords()
+    source_dir = '/DataA/fmp22_shuxin_yao/src/dataset/Prostate/A/256-256-60/train'
+    tf_dir = '../data/training_ct/A'
+    filename_all_src = os.listdir(source_dir)
+    for data in filename_all_src:
+        tfname = data.split('/')[-1].split('.')[0] + '.tfrecords'
+        tf_pth = os.path.join(tf_dir, tfname)
+        data_pth = os.path.join(source_dir, data)
+        npz2tfrecords(data_pth, tf_pth)
+    print('Files in {0} has converted into {1}!\n'.format(source_dir, tf_dir))
+    # npz2tfrecords()
 

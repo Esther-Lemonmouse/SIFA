@@ -39,7 +39,8 @@ def _decode_samples(image_list, shuffle=False):
     label_vol = tf.reshape(label_vol, raw_size)
     label_vol = tf.slice(label_vol, [0, 0, 1], label_size)
 
-    batch_y = tf.one_hot(tf.cast(tf.squeeze(label_vol), tf.uint8), 5)
+    # batch_y = tf.one_hot(tf.cast(tf.squeeze(label_vol), tf.uint8), 5)   # 因为是5类所以加成了5维？不太理解为什么变成5了
+    batch_y = tf.one_hot(tf.cast(tf.squeeze(label_vol), tf.uint8), 2)
 
     return tf.expand_dims(data_vol[:, :, 1], axis=2), batch_y
 
@@ -66,15 +67,20 @@ def load_data(source_pth, target_pth, do_shuffle=True):
 
     # For converting the value range to be [-1 1] using the equation 2*[(x-x_min)/(x_max-x_min)]-1.
     # The values {-1.8, 4.4, -2.8, 3.2} need to be changed according to the statistics of specific datasets
+    # prostate 数据集：B(mr关键字){-2.5, 4.5}, A(ct关键字){-2.4, 5.5}
     if 'mr' in source_pth:
-        image_i = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -1.8), tf.subtract(4.4, -1.8)), 2.0), 1)
+        # image_i = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -1.8), tf.subtract(4.4, -1.8)), 2.0), 1)
+        image_i = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -2.5), tf.subtract(4.5, -2.5)), 2.0), 1)
     elif 'ct' in source_pth:
-        image_i = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -2.8), tf.subtract(3.2, -2.8)), 2.0), 1)
+        # image_i = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -2.8), tf.subtract(3.2, -2.8)), 2.0), 1)
+        image_i = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -2.4), tf.subtract(5.5, -2.4)), 2.0), 1)
 
     if 'ct' in target_pth:
-        image_j = tf.subtract(tf.multiply(tf.div(tf.subtract(image_j, -2.8), tf.subtract(3.2, -2.8)), 2.0), 1)
+        # image_j = tf.subtract(tf.multiply(tf.div(tf.subtract(image_j, -2.8), tf.subtract(3.2, -2.8)), 2.0), 1)
+        image_j = tf.subtract(tf.multiply(tf.div(tf.subtract(image_j, -2.4), tf.subtract(5.5, -2.4)), 2.0), 1)
     elif 'mr' in target_pth:
-        image_j = tf.subtract(tf.multiply(tf.div(tf.subtract(image_j, -1.8), tf.subtract(4.4, -1.8)), 2.0), 1)
+        # image_j = tf.subtract(tf.multiply(tf.div(tf.subtract(image_j, -1.8), tf.subtract(4.4, -1.8)), 2.0), 1)
+        image_j = tf.subtract(tf.multiply(tf.div(tf.subtract(image_j, -2.5), tf.subtract(4.5, -2.5)), 2.0), 1)
 
 
     # Batch

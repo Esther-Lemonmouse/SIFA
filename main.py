@@ -12,11 +12,11 @@ import tensorflow as tf
 import data_loader, losses, model
 from stats_func import *
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+os.environ['CUDA_VISIBLE_DEVICES'] = '3'
 
-save_interval = 300
+save_interval = 400     # 默认是300
 evaluation_interval = 10
-random_seed = 1234
+random_seed = 1234  # 默认是1234
 
 
 class SIFA:
@@ -320,7 +320,8 @@ class SIFA:
         # Initializing the global variables
         init = (tf.global_variables_initializer(),
                 tf.local_variables_initializer())
-        saver = tf.train.Saver(max_to_keep=40)
+        # saver = tf.train.Saver(max_to_keep=40)
+        saver = tf.train.Saver(max_to_keep=4)
 
         with open(self._source_train_pth, 'r') as fp:
             rows_s = fp.readlines()
