@@ -1,3 +1,4 @@
+# 这个脚本现在不需要了
 import os.path
 import numpy as np
 import medpy.io as medio

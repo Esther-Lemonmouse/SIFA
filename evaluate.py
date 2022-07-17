@@ -11,14 +11,14 @@ from stats_func import *
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0' # in local file, this is not useful
 
-CHECKPOINT_PATH = './output/20220705-173441/sifa-9999' # model path
+CHECKPOINT_PATH = './output/20220715-142242/sifa-99' # model path
 BASE_FID = '' # folder path of test files
-TESTFILE_FID = './data/datalist/test_ct_A.txt' # path of the .txt file storing the test filenames
+TESTFILE_FID = './data/datalist/Prostate_data_testing_ct_B.txt' # path of the .txt file storing the test filenames
 TEST_MODALITY = 'CT'
 USE_newstat = True     # 默认是True
 KEEP_RATE = 1.0
 IS_TRAINING = False
-BATCH_SIZE = 32 # 默认是128
+BATCH_SIZE = 30 # 默认是128
 
 data_size = [256, 256, 1]
 label_size = [256, 256, 1]
@@ -123,7 +123,8 @@ class SIFA:
 
         my_list = []
         for _item in _list:
-            my_list.append(self.base_fd + '/' + _item.split('\n')[0])
+            # my_list.append(self.base_fd + '/' + _item.split('\n')[0])
+            my_list.append(_item.split('\n')[0])    # 相对目录
         return my_list
 
     def label_decomp(self, label_batch):
@@ -164,7 +165,7 @@ class SIFA:
 
                 # This is to make the orientation of test data match with the training data
                 # Set to False if the orientation of test data has already been aligned with the training data
-                if True:  # 默认是true
+                if False:  # 默认是true
                     data = np.flip(data, axis=0)
                     data = np.flip(data, axis=1)
                     label = np.flip(label, axis=0)
@@ -180,16 +181,16 @@ class SIFA:
                         data_batch[idx, ...] = np.expand_dims(data[..., jj].copy(), 2)  ###3改成2
                         label_batch[idx, ...] = label[..., jj].copy()
                     label_batch = self.label_decomp(label_batch)
-                    # prostate 数据集：B(mr关键字){-2.5, 4.5}, A(ct关键字){-2.4, 5.5}
+                    # prostate 数据集：B(CT关键字){-3.0, 3.8}, A(MR关键字){-3.1, 4.2}
                     if TEST_MODALITY=='CT':
                         if USE_newstat:
-                            data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -2.4), np.subtract(5.5, -2.4)), 2.0), 1)
+                            data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -3.0), np.subtract(3.8, -3.0)), 2.0), 1)
                             # data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -2.8), np.subtract(3.2, -2.8)), 2.0),1) # {-2.8, 3.2} need to be changed according to the data statistics
                         else:
                             data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -1.9), np.subtract(3.0, -1.9)), 2.0),1) # {-1.9, 3.0} need to be changed according to the data statistics
                             
                     elif TEST_MODALITY=='MR':
-                        data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -2.5), np.subtract(4.5, -2.5)), 2.0), 1)  # {-2.8, 3.2} need to be changed according to the data statistics
+                        data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -3.1), np.subtract(4.2, -3.1)), 2.0), 1)  # {-2.8, 3.2} need to be changed according to the data statistics
                         # data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -1.8), np.subtract(4.4, -1.8)), 2.0),1)  # {-1.8, 4.4} need to be changed according to the data statistics
 
                     compact_pred_b_val = sess.run(self.compact_pred_b, feed_dict={self.input_b: data_batch, self.gt_b: label_batch})

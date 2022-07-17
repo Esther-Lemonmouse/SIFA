@@ -1,7 +1,9 @@
 import os
 import numpy as np
 
-test_dir = '/DataA/fmp22_shuxin_yao/src/dataset/SIFA-Preprocess'  # remote
+SOURCE_DIR = './data'
+DESTINATION_DIR = './data/datalist'
+PREFIX = 'Prostate'
 # test_dir = './data'     # local
 
 
@@ -16,18 +18,22 @@ def make_datalist(data_fd, data_list):
 
 
 if __name__ == '__main__':
-    # data_fd_prefix = './data/training_ct'
-    # data_fd_prefix = './data/validation_ct'
-    # data_fd_prefix = './data/training_mr'
-    data_fd_prefix = './data/validation_mr'
-    data_list_dir = './data/datalist'
+    data_tree = os.walk(SOURCE_DIR)
 
-    fid = os.path.join(data_fd_prefix, 'B')
-    # list_file = data_list_dir + '/training_ct_A.txt'
-    # list_file = data_list_dir + '/validation_ct_A.txt'
-    # list_file = data_list_dir + '/training_mr_B.txt'
-    list_file = data_list_dir + '/validation_mr_B.txt'
+    for dirpath, dirname, filelist in data_tree:
+        if not filelist:
+            continue
+        check_pth = os.path.join(dirpath, filelist[0])
+        if os.path.isfile(check_pth):
+            writelist = [dirpath+'/'+file+'\n' for file in filelist if file.endswith('tfrecords') or file.endswith('npz')]
+        else:
+            writelist = []
 
-    # make_datalist('/DataA/fmp22_shuxin_yao/src/dataset/Prostate/B/256-256-60/train', './data/datalist/train_prostate_B.txt')
-    make_datalist('/DataA/fmp22_shuxin_yao/src/dataset/Prostate/temptest/A', './data/datalist/test_ct_A.txt')
-    # make_datalist(fid, list_file)
+        if writelist:
+            name_part = dirpath.split('/')[1:]
+            name_part.insert(0, PREFIX)
+            txt_name = '_'.join(name_part) + '.txt'
+            txt_dir = os.path.join(DESTINATION_DIR, txt_name)
+            make_datalist(dirpath, txt_dir)
+
+    print('Done')
