@@ -67,17 +67,17 @@ def load_data(source_pth, target_pth, do_shuffle=True):
 
     # For converting the value range to be [-1 1] using the equation 2*[(x-x_min)/(x_max-x_min)]-1.
     # The values {-1.8, 4.4, -2.8, 3.2} need to be changed according to the statistics of specific datasets
-    # prostate 数据集：B(ct关键字){-3.0, 3.8}, A(mr关键字){-3.1, 4.2}
+    # prostate 数据集：B(ct关键字){-3.0, 3.8}, A(mr关键字){-3.1, 4.2}, C(ct关键字){-3.2, 4.3}
     if 'mr' in source_pth:
         # image_i = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -1.8), tf.subtract(4.4, -1.8)), 2.0), 1)
         image_i = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -3.1), tf.subtract(4.2, -3.1)), 2.0), 1)
     elif 'ct' in source_pth:
         # image_i = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -2.8), tf.subtract(3.2, -2.8)), 2.0), 1)
-        image_i = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -3.0), tf.subtract(3.8, -3.0)), 2.0), 1)
+        image_i = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -3.2), tf.subtract(4.3, -3.2)), 2.0), 1)
 
     if 'ct' in target_pth:
         # image_j = tf.subtract(tf.multiply(tf.div(tf.subtract(image_j, -2.8), tf.subtract(3.2, -2.8)), 2.0), 1)
-        image_j = tf.subtract(tf.multiply(tf.div(tf.subtract(image_j, -3.0), tf.subtract(3.8, -3.0)), 2.0), 1)
+        image_j = tf.subtract(tf.multiply(tf.div(tf.subtract(image_j, -3.2), tf.subtract(4.3, -3.2)), 2.0), 1)
     elif 'mr' in target_pth:
         # image_j = tf.subtract(tf.multiply(tf.div(tf.subtract(image_j, -1.8), tf.subtract(4.4, -1.8)), 2.0), 1)
         image_j = tf.subtract(tf.multiply(tf.div(tf.subtract(image_j, -3.1), tf.subtract(4.2, -3.1)), 2.0), 1)

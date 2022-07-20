@@ -158,3 +158,5 @@ cython_debug/
 data/*
 # 输出结果很大，可以不同步
 output/*
+# 把命令行输出映射的到log文件夹中，无需git控制
+log/*

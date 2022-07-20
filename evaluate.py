@@ -9,11 +9,11 @@ import tensorflow as tf
 import model
 from stats_func import *
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '0' # in local file, this is not useful
+os.environ['CUDA_VISIBLE_DEVICES'] = '2' # in local file, this is not useful
 
-CHECKPOINT_PATH = './output/20220715-142242/sifa-99' # model path
+CHECKPOINT_PATH = './output/20220717-145424/sifa-19999' # model path
 BASE_FID = '' # folder path of test files
-TESTFILE_FID = './data/datalist/Prostate_data_testing_ct_B.txt' # path of the .txt file storing the test filenames
+TESTFILE_FID = './data/datalist/Prostate_data_testing_mr_A.txt' # path of the .txt file storing the test filenames
 TEST_MODALITY = 'CT'
 USE_newstat = True     # 默认是True
 KEEP_RATE = 1.0
@@ -181,10 +181,10 @@ class SIFA:
                         data_batch[idx, ...] = np.expand_dims(data[..., jj].copy(), 2)  ###3改成2
                         label_batch[idx, ...] = label[..., jj].copy()
                     label_batch = self.label_decomp(label_batch)
-                    # prostate 数据集：B(CT关键字){-3.0, 3.8}, A(MR关键字){-3.1, 4.2}
+                    # prostate 数据集：B(CT关键字){-3.0, 3.8}, A(MR关键字){-3.1, 4.2}, C(ct关键字){-3.2, 4.3}
                     if TEST_MODALITY=='CT':
                         if USE_newstat:
-                            data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -3.0), np.subtract(3.8, -3.0)), 2.0), 1)
+                            data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -3.2), np.subtract(4.3, -3.2)), 2.0), 1)
                             # data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -2.8), np.subtract(3.2, -2.8)), 2.0),1) # {-2.8, 3.2} need to be changed according to the data statistics
                         else:
                             data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -1.9), np.subtract(3.0, -1.9)), 2.0),1) # {-1.9, 3.0} need to be changed according to the data statistics
