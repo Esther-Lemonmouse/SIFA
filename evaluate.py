@@ -9,7 +9,7 @@ import tensorflow as tf
 import model
 from stats_func import *
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '2' # in local file, this is not useful
+os.environ['CUDA_VISIBLE_DEVICES'] = '3' # in local file, this is not useful
 
 CHECKPOINT_PATH = './output/20220717-145424/sifa-19999' # model path
 BASE_FID = '' # folder path of test files
