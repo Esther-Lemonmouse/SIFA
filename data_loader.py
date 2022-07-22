@@ -62,26 +62,59 @@ def _load_samples(source_pth, target_pth):
 
 
 def load_data(source_pth, target_pth, do_shuffle=True):
-
     image_i, image_j, gt_i, gt_j = _load_samples(source_pth, target_pth)
 
-    # For converting the value range to be [-1 1] using the equation 2*[(x-x_min)/(x_max-x_min)]-1.
-    # The values {-1.8, 4.4, -2.8, 3.2} need to be changed according to the statistics of specific datasets
-    # prostate 数据集：B(ct关键字){-3.0, 3.8}, A(mr关键字){-3.1, 4.2}, C(ct关键字){-3.2, 4.3}
-    if 'mr' in source_pth:
-        # image_i = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -1.8), tf.subtract(4.4, -1.8)), 2.0), 1)
+    ############################################################################
+    # # ORIGINAL cardiac set
+    # # For converting the value range to be [-1 1] using the equation 2*[(x-x_min)/(x_max-x_min)]-1.
+    # # The values {-1.8, 4.4, -2.8, 3.2} need to be changed according to the statistics of specific datasets
+    # if 'mr' in source_pth:
+    #     image_i = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -1.8), tf.subtract(4.4, -1.8)), 2.0), 1)
+    # elif 'ct' in source_pth:
+    #     image_i = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -2.8), tf.subtract(3.2, -2.8)), 2.0), 1)
+    #
+    # if 'ct' in target_pth:
+    #     image_j = tf.subtract(tf.multiply(tf.div(tf.subtract(image_j, -2.8), tf.subtract(3.2, -2.8)), 2.0), 1)
+    # elif 'mr' in target_pth:
+    #     image_j = tf.subtract(tf.multiply(tf.div(tf.subtract(image_j, -1.8), tf.subtract(4.4, -1.8)), 2.0), 1)
+    ############################################################################
+    ############################################################################
+    # prostate 数据集相关最值参数设置
+    # mr关键字 -- A
+    # ct关键字 -- B C D E F
+    # A: {-3.1, 4.2}
+    # B: {-3.0, 3.8}
+    # C: {-3.2, 4.3}
+    # D: {-3.0, 4.1}
+    # E: {-3.8, 6.3}
+    # F: {-3.4, 4.9}
+    ############################################################################
+    if 'A' in source_pth:
         image_i = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -3.1), tf.subtract(4.2, -3.1)), 2.0), 1)
-    elif 'ct' in source_pth:
-        # image_i = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -2.8), tf.subtract(3.2, -2.8)), 2.0), 1)
+    elif 'B' in source_pth:
+        image_i = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -3.0), tf.subtract(3.8, -3.0)), 2.0), 1)
+    elif 'C' in source_pth:
         image_i = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -3.2), tf.subtract(4.3, -3.2)), 2.0), 1)
+    elif 'D' in source_pth:
+        image_i = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -3.0), tf.subtract(4.1, -3.0)), 2.0), 1)
+    elif 'E' in source_pth:
+        image_i = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -3.8), tf.subtract(6.3, -3.8)), 2.0), 1)
+    elif 'F' in source_pth:
+        image_i = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -3.4), tf.subtract(4.9, -3.4)), 2.0), 1)
 
-    if 'ct' in target_pth:
-        # image_j = tf.subtract(tf.multiply(tf.div(tf.subtract(image_j, -2.8), tf.subtract(3.2, -2.8)), 2.0), 1)
-        image_j = tf.subtract(tf.multiply(tf.div(tf.subtract(image_j, -3.2), tf.subtract(4.3, -3.2)), 2.0), 1)
-    elif 'mr' in target_pth:
-        # image_j = tf.subtract(tf.multiply(tf.div(tf.subtract(image_j, -1.8), tf.subtract(4.4, -1.8)), 2.0), 1)
-        image_j = tf.subtract(tf.multiply(tf.div(tf.subtract(image_j, -3.1), tf.subtract(4.2, -3.1)), 2.0), 1)
-
+    if 'A' in target_pth:
+        image_j = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -3.1), tf.subtract(4.2, -3.1)), 2.0), 1)
+    elif 'B' in target_pth:
+        image_j = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -3.0), tf.subtract(3.8, -3.0)), 2.0), 1)
+    elif 'C' in target_pth:
+        image_j = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -3.2), tf.subtract(4.3, -3.2)), 2.0), 1)
+    elif 'D' in target_pth:
+        image_j = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -3.0), tf.subtract(4.1, -3.0)), 2.0), 1)
+    elif 'E' in target_pth:
+        image_j = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -3.8), tf.subtract(6.3, -3.8)), 2.0), 1)
+    elif 'F' in target_pth:
+        image_j = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -3.4), tf.subtract(4.9, -3.4)), 2.0), 1)
+    ############################################################################
 
     # Batch
     if do_shuffle is True:

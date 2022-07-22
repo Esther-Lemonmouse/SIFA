@@ -1,8 +1,8 @@
 {
-  "source_train_pth": "./data/datalist/Prostate_data_training_ct_C.txt",
-  "target_train_pth": "./data/datalist/Prostate_data_training_mr_A.txt",
-  "source_val_pth": "./data/datalist/Prostate_data_validation_ct_C.txt",
-  "target_val_pth": "./data/datalist/Prostate_data_validation_mr_A.txt",
+  "source_train_pth": "./data/datalist/Prostate_data_training_mr_A.txt",
+  "target_train_pth": "./data/datalist/Prostate_data_training_ct_D.txt",
+  "source_val_pth": "./data/datalist/Prostate_data_validation_mr_A.txt",
+  "target_val_pth": "./data/datalist/Prostate_data_validation_ct_D.txt",
   "output_root_dir": "./output",
   "pool_size": 50,
   "_LAMBDA_A": 10,

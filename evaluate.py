@@ -9,12 +9,12 @@ import tensorflow as tf
 import model
 from stats_func import *
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '3' # in local file, this is not useful
+os.environ['CUDA_VISIBLE_DEVICES'] = '1' # in local file, this is not useful
 
 CHECKPOINT_PATH = './output/20220717-145424/sifa-19999' # model path
 BASE_FID = '' # folder path of test files
 TESTFILE_FID = './data/datalist/Prostate_data_testing_mr_A.txt' # path of the .txt file storing the test filenames
-TEST_MODALITY = 'CT'
+TEST_MODALITY = 'MR'
 USE_newstat = True     # 默认是True
 KEEP_RATE = 1.0
 IS_TRAINING = False
