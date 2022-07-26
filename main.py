@@ -12,7 +12,7 @@ import tensorflow as tf
 import data_loader, losses, model
 from stats_func import *
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+os.environ['CUDA_VISIBLE_DEVICES'] = '3'
 
 save_interval = 500     # 默认是300
 evaluation_interval = 10

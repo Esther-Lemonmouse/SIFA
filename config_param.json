@@ -1,8 +1,8 @@
 {
   "source_train_pth": "./data/datalist/Prostate_data_training_mr_A.txt",
-  "target_train_pth": "./data/datalist/Prostate_data_training_ct_D.txt",
+  "target_train_pth": "./data/datalist/Prostate_data_training_mr_A.txt",
   "source_val_pth": "./data/datalist/Prostate_data_validation_mr_A.txt",
-  "target_val_pth": "./data/datalist/Prostate_data_validation_ct_D.txt",
+  "target_val_pth": "./data/datalist/Prostate_data_validation_mr_A.txt",
   "output_root_dir": "./output",
   "pool_size": 50,
   "_LAMBDA_A": 10,
@@ -10,11 +10,11 @@
   "skip": 1,
   "num_cls": 2,
   "base_lr":0.0002,
-  "max_step": 20000,
+  "max_step": 10000,
   "keep_rate_value": 1.0,
   "is_training_value": 1,
   "batch_size": 8,
-  "lr_gan_decay": 0.000001,
+  "lr_gan_decay": 0,
   "to_restore": 0,
   "checkpoint_dir": " "
 }

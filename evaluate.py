@@ -9,13 +9,14 @@ import tensorflow as tf
 import model
 from stats_func import *
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '1' # in local file, this is not useful
+os.environ['CUDA_VISIBLE_DEVICES'] = '2' # in local file, this is not useful
 
-CHECKPOINT_PATH = './output/20220717-145424/sifa-19999' # model path
+CHECKPOINT_PATH = './output/20220717-144957/sifa-19999' # model path
 BASE_FID = '' # folder path of test files
-TESTFILE_FID = './data/datalist/Prostate_data_testing_mr_A.txt' # path of the .txt file storing the test filenames
-TEST_MODALITY = 'MR'
-USE_newstat = True     # 默认是True
+TESTFILE_FID = './data/datalist/Prostate_data_testing_ct_B.txt' # path of the .txt file storing the test filenames
+# TEST_MODALITY = 'CT'
+TEST_MODALITY = 'B'
+# USE_newstat = True     # 默认是True
 KEEP_RATE = 1.0
 IS_TRAINING = False
 BATCH_SIZE = 30 # 默认是128
@@ -151,7 +152,13 @@ class SIFA:
 
         test_list = self.read_lists(self.test_fid)
 
-        with tf.Session() as sess:
+        # eval时，为了存图，限制一下GPU使用量
+        ############原始代码#############
+        # with tf.Session() as sess:
+        ################################
+        gpu_config = tf.GPUOptions(per_process_gpu_memory_fraction=0.3)
+        with tf.Session(config=tf.ConfigProto(gpu_options=gpu_config)) as sess:
+        ################################
             sess.run(init)
 
             saver.restore(sess, self.checkpoint_pth)
@@ -181,17 +188,43 @@ class SIFA:
                         data_batch[idx, ...] = np.expand_dims(data[..., jj].copy(), 2)  ###3改成2
                         label_batch[idx, ...] = label[..., jj].copy()
                     label_batch = self.label_decomp(label_batch)
-                    # prostate 数据集：B(CT关键字){-3.0, 3.8}, A(MR关键字){-3.1, 4.2}, C(ct关键字){-3.2, 4.3}
-                    if TEST_MODALITY=='CT':
-                        if USE_newstat:
-                            data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -3.2), np.subtract(4.3, -3.2)), 2.0), 1)
-                            # data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -2.8), np.subtract(3.2, -2.8)), 2.0),1) # {-2.8, 3.2} need to be changed according to the data statistics
-                        else:
-                            data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -1.9), np.subtract(3.0, -1.9)), 2.0),1) # {-1.9, 3.0} need to be changed according to the data statistics
-                            
-                    elif TEST_MODALITY=='MR':
-                        data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -3.1), np.subtract(4.2, -3.1)), 2.0), 1)  # {-2.8, 3.2} need to be changed according to the data statistics
-                        # data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -1.8), np.subtract(4.4, -1.8)), 2.0),1)  # {-1.8, 4.4} need to be changed according to the data statistics
+
+                    ############################################################################
+                    # 原始SIFA文件设置: using Cardiac set
+                    # if TEST_MODALITY=='CT':
+                    #     if USE_newstat:
+                    #         data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -2.8), np.subtract(3.2, -2.8)), 2.0),1) # {-2.8, 3.2} need to be changed according to the data statistics
+                    #     else:
+                    #         data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -1.9), np.subtract(3.0, -1.9)), 2.0),1) # {-1.9, 3.0} need to be changed according to the data statistics
+                    # elif TEST_MODALITY=='MR':
+                    #     data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -1.8), np.subtract(4.4, -1.8)), 2.0),1)  # {-1.8, 4.4} need to be changed according to the data statistics
+                    ############################################################################
+                    ############################################################################
+                    # prostate 数据集相关最值参数设置
+                    # mr关键字 -- A
+                    # ct关键字 -- B C D E F
+                    # A: {-3.1, 4.2}
+                    # B: {-3.0, 3.8}
+                    # C: {-3.2, 4.3}
+                    # D: {-3.0, 4.1}
+                    # E: {-3.8, 6.3}
+                    # F: {-3.4, 4.9}
+                    ############################################################################
+                    if TEST_MODALITY == 'A':
+                        data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -3.1), np.subtract(4.2, -3.1)), 2.0), 1)
+                    elif TEST_MODALITY == 'B':
+                        data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -3.0), np.subtract(3.8, -3.0)), 2.0), 1)
+                    elif TEST_MODALITY == 'C':
+                        data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -3.2), np.subtract(4.3, -3.2)), 2.0), 1)
+                    elif TEST_MODALITY == 'D':
+                        data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -3.0), np.subtract(4.1, -3.0)), 2.0), 1)
+                    elif TEST_MODALITY == 'E':
+                        data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -3.8), np.subtract(6.3, -3.8)), 2.0), 1)
+                    elif TEST_MODALITY == 'F':
+                        data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -3.4), np.subtract(4.9, -3.4)), 2.0), 1)
+                    else:
+                        raise NameError('Unexpected test modality. It should an alphabet in A-F.')
+                    ############################################################################
 
                     compact_pred_b_val = sess.run(self.compact_pred_b, feed_dict={self.input_b: data_batch, self.gt_b: label_batch})
 
