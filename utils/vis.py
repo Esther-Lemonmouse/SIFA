@@ -12,7 +12,7 @@ import os
 import cv2
 import numpy as np
 
-MODALITY = 'A2B'
+MODALITY = 'B2A'
 
 def slice_crop(img_vol, slice_idx):
     if slice_idx >= img_vol.shape[2] or slice_idx < 0:
@@ -63,6 +63,8 @@ def main_process(gth=False, class_num=2):
     rng = np.random.default_rng(17)
     colormap = colormap_generator(class_num, rng)
     target_img_list = [fn for fn in os.listdir() if fn.endswith('npz')]
+    if not target_img_list:
+        raise ValueError('Please move the test images manually into directory "visualization". ')
 
     for target_name in target_img_list:
         target = np.load(target_name)
@@ -99,5 +101,5 @@ def main_process(gth=False, class_num=2):
 
 
 if __name__ == '__main__':
-    main_process(gth=True, class_num=2)
+    main_process(gth=False, class_num=2)
     print('Done')
