@@ -9,13 +9,12 @@ import tensorflow as tf
 import model
 from stats_func import *
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '2' # in local file, this is not useful
+os.environ['CUDA_VISIBLE_DEVICES'] = '0' # in local file, this is not useful
 
-CHECKPOINT_PATH = './output/20220717-144957/sifa-19999' # model path
+CHECKPOINT_PATH = './output/20220730-192308/sifa-15199' # model path
 BASE_FID = '' # folder path of test files
-TESTFILE_FID = './data/datalist/Prostate_data_testing_ct_B.txt' # path of the .txt file storing the test filenames
-# TEST_MODALITY = 'CT'
-TEST_MODALITY = 'B'
+TESTFILE_FID = './data/prostate/datalist/data_prostate_testing_E.txt' # path of the .txt file storing the test filenames
+TEST_MODALITY = 'E' # the modality name you want to be tested
 # USE_newstat = True     # 默认是True
 KEEP_RATE = 1.0
 IS_TRAINING = False
@@ -29,6 +28,7 @@ contour_map = {
     'prostate': 1,
     }
 
+#### original cardiac ####
 # contour_map = {
 #     "bg": 0,
 #     "la_myo": 1,
@@ -53,7 +53,6 @@ class SIFA:
         self._num_cls = int(config['num_cls'])
 
         self.base_fd = BASE_FID
-        # self.test_fid = BASE_FID + '/' + TESTFILE_FID
         self.test_fid = TESTFILE_FID
 
     def model_setup(self):
@@ -124,7 +123,7 @@ class SIFA:
 
         my_list = []
         for _item in _list:
-            # my_list.append(self.base_fd + '/' + _item.split('\n')[0])
+            # my_list.append(self.base_fd + '/' + _item.split('\n')[0]) # 绝对目录
             my_list.append(_item.split('\n')[0])    # 相对目录
         return my_list
 
@@ -156,7 +155,7 @@ class SIFA:
         ############原始代码#############
         # with tf.Session() as sess:
         ################################
-        gpu_config = tf.GPUOptions(per_process_gpu_memory_fraction=0.3)
+        gpu_config = tf.GPUOptions(allow_growth=True)
         with tf.Session(config=tf.ConfigProto(gpu_options=gpu_config)) as sess:
         ################################
             sess.run(init)
@@ -172,7 +171,7 @@ class SIFA:
 
                 # This is to make the orientation of test data match with the training data
                 # Set to False if the orientation of test data has already been aligned with the training data
-                if False:  # 默认是true
+                if False:  # 我的数据处理过程中训练集和测试集的方向是一致的，无需进行翻转
                     data = np.flip(data, axis=0)
                     data = np.flip(data, axis=1)
                     label = np.flip(label, axis=0)
@@ -189,7 +188,7 @@ class SIFA:
                         label_batch[idx, ...] = label[..., jj].copy()
                     label_batch = self.label_decomp(label_batch)
 
-                    ############################################################################
+                    ############################################################
                     # 原始SIFA文件设置: using Cardiac set
                     # if TEST_MODALITY=='CT':
                     #     if USE_newstat:
@@ -198,18 +197,16 @@ class SIFA:
                     #         data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -1.9), np.subtract(3.0, -1.9)), 2.0),1) # {-1.9, 3.0} need to be changed according to the data statistics
                     # elif TEST_MODALITY=='MR':
                     #     data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -1.8), np.subtract(4.4, -1.8)), 2.0),1)  # {-1.8, 4.4} need to be changed according to the data statistics
-                    ############################################################################
-                    ############################################################################
+                    ############################################################
+                    ############################################################
                     # prostate 数据集相关最值参数设置
-                    # mr关键字 -- A
-                    # ct关键字 -- B C D E F
                     # A: {-3.1, 4.2}
                     # B: {-3.0, 3.8}
                     # C: {-3.2, 4.3}
                     # D: {-3.0, 4.1}
                     # E: {-3.8, 6.3}
                     # F: {-3.4, 4.9}
-                    ############################################################################
+                    ############################################################
                     if TEST_MODALITY == 'A':
                         data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -3.1), np.subtract(4.2, -3.1)), 2.0), 1)
                     elif TEST_MODALITY == 'B':
@@ -224,7 +221,7 @@ class SIFA:
                         data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -3.4), np.subtract(4.9, -3.4)), 2.0), 1)
                     else:
                         raise NameError('Unexpected test modality. It should an alphabet in A-F.')
-                    ############################################################################
+                    ############################################################
 
                     compact_pred_b_val = sess.run(self.compact_pred_b, feed_dict={self.input_b: data_batch, self.gt_b: label_batch})
 

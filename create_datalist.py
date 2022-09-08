@@ -1,11 +1,13 @@
+"""
+本脚本用于生成数据目录文件便于训练
+"""
+
 import os
 import numpy as np
 
-SOURCE_DIR = './data'
-DESTINATION_DIR = './data/datalist'
-PREFIX = 'Prostate'
-# test_dir = './data'     # local
-
+#### prostate ####
+SOURCE_DIR = './data/prostate'
+DESTINATION_DIR = './data/prostate/datalist'
 
 def make_datalist(data_fd, data_list):
     filename_all = os.listdir(data_fd)
@@ -18,6 +20,9 @@ def make_datalist(data_fd, data_list):
 
 
 if __name__ == '__main__':
+    if not os.path.exists(DESTINATION_DIR):
+        os.makedirs(DESTINATION_DIR, exist_ok=True)
+
     data_tree = os.walk(SOURCE_DIR)
 
     for dirpath, dirname, filelist in data_tree:
@@ -31,7 +36,6 @@ if __name__ == '__main__':
 
         if writelist:
             name_part = dirpath.split('/')[1:]
-            name_part.insert(0, PREFIX)
             txt_name = '_'.join(name_part) + '.txt'
             txt_dir = os.path.join(DESTINATION_DIR, txt_name)
             make_datalist(dirpath, txt_dir)

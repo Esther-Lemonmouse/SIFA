@@ -40,6 +40,7 @@ def _decode_samples(image_list, shuffle=False):
     label_vol = tf.slice(label_vol, [0, 0, 1], label_size)
 
     # batch_y = tf.one_hot(tf.cast(tf.squeeze(label_vol), tf.uint8), 5)   # 因为是5类所以加成了5维？不太理解为什么变成5了
+    #### Prostate (2 classes) ####
     batch_y = tf.one_hot(tf.cast(tf.squeeze(label_vol), tf.uint8), 2)   # 2分类问题，所以改成2
 
     return tf.expand_dims(data_vol[:, :, 1], axis=2), batch_y
@@ -80,8 +81,6 @@ def load_data(source_pth, target_pth, do_shuffle=True):
     ############################################################################
     ############################################################################
     # prostate 数据集相关最值参数设置
-    # mr关键字 -- A
-    # ct关键字 -- B C D E F
     # A: {-3.1, 4.2}
     # B: {-3.0, 3.8}
     # C: {-3.2, 4.3}

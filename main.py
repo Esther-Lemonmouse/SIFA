@@ -1,4 +1,10 @@
-"""Code for training SIFA."""
+"""
+Code for training SIFA.
+Copyright: Cheng Chen (https://github.com/cchen-cc/SIFA)
+Forked by: lemonmouse (https://github.com/Esther-Lemonmouse/SIFA)
+感谢原作大佬提供的baseline！
+SIFA模型主要用于解决医学影像中的cross-modality问题
+"""
 from datetime import datetime
 import json
 import numpy as np
@@ -12,12 +18,12 @@ import tensorflow as tf
 import data_loader, losses, model
 from stats_func import *
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '3'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
-save_interval = 500     # 默认是300
+save_interval = 400     # 默认是300
 evaluation_interval = 10
-# random_seed = 1234  # 默认是1234
-random_seed = time.clock()
+random_seed = 1234  # 默认是1234
+# random_seed = time.clock()
 
 
 class SIFA:
@@ -322,7 +328,7 @@ class SIFA:
         init = (tf.global_variables_initializer(),
                 tf.local_variables_initializer())
         # saver = tf.train.Saver(max_to_keep=40)
-        saver = tf.train.Saver(max_to_keep=4)
+        saver = tf.train.Saver(max_to_keep=50)
 
         with open(self._source_train_pth, 'r') as fp:
             rows_s = fp.readlines()
