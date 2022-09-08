@@ -1,4 +1,10 @@
-"""Code for training SIFA."""
+"""
+Code for training SIFA.
+Copyright: Cheng Chen (https://github.com/cchen-cc/SIFA)
+Forked by: lemonmouse (https://github.com/Esther-Lemonmouse/SIFA)
+感谢原作大佬提供的baseline！
+SIFA模型主要用于解决医学影像中的cross-modality问题
+"""
 from datetime import datetime
 import json
 import numpy as np
@@ -14,9 +20,10 @@ from stats_func import *
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
-save_interval = 300
+save_interval = 400     # 默认是300
 evaluation_interval = 10
-random_seed = 1234
+random_seed = 1234  # 默认是1234
+# random_seed = time.clock()
 
 
 class SIFA:
@@ -33,7 +40,7 @@ class SIFA:
             os.makedirs(self._output_root_dir)
         self._output_dir = os.path.join(self._output_root_dir, current_time)
         self._images_dir = os.path.join(self._output_dir, 'imgs')
-        self._num_imgs_to_save = 20
+        self._num_imgs_to_save = 5     # 原始是20
         self._pool_size = int(config['pool_size'])
         self._lambda_a = float(config['_LAMBDA_A'])
         self._lambda_b = float(config['_LAMBDA_B'])
@@ -320,7 +327,8 @@ class SIFA:
         # Initializing the global variables
         init = (tf.global_variables_initializer(),
                 tf.local_variables_initializer())
-        saver = tf.train.Saver(max_to_keep=40)
+        # saver = tf.train.Saver(max_to_keep=40)
+        saver = tf.train.Saver(max_to_keep=50)
 
         with open(self._source_train_pth, 'r') as fp:
             rows_s = fp.readlines()
@@ -506,7 +514,6 @@ class SIFA:
                 self.num_fake_inputs += 1
 
                 print ('iter {}: processing time {}'.format(cnt, time.time() - starttime))
-                
                 # batch evaluation
                 if (i + 1) % evaluation_interval == 0:
                     summary_str_fake_b, summary_str_b = sess.run([self.dice_fake_b_mean_summ, self.dice_b_mean_summ],

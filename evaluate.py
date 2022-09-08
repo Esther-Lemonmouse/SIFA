@@ -9,27 +9,33 @@ import tensorflow as tf
 import model
 from stats_func import *
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0' # in local file, this is not useful
 
-CHECKPOINT_PATH = '' # model path
+CHECKPOINT_PATH = './output/20220730-192308/sifa-15199' # model path
 BASE_FID = '' # folder path of test files
-TESTFILE_FID = '' # path of the .txt file storing the test filenames
-TEST_MODALITY = 'CT'
-USE_newstat = True
+TESTFILE_FID = './data/prostate/datalist/data_prostate_testing_E.txt' # path of the .txt file storing the test filenames
+TEST_MODALITY = 'E' # the modality name you want to be tested
+# USE_newstat = True     # 默认是True
 KEEP_RATE = 1.0
 IS_TRAINING = False
-BATCH_SIZE = 128
+BATCH_SIZE = 30 # 默认是128
 
 data_size = [256, 256, 1]
 label_size = [256, 256, 1]
 
 contour_map = {
-    "bg": 0,
-    "la_myo": 1,
-    "la_blood": 2,
-    "lv_blood": 3,
-    "aa": 4,
-}
+    'bg': 0,
+    'prostate': 1,
+    }
+
+#### original cardiac ####
+# contour_map = {
+#     "bg": 0,
+#     "la_myo": 1,
+#     "la_blood": 2,
+#     "lv_blood": 3,
+#     "aa": 4,
+# }
 
 
 class SIFA:
@@ -47,7 +53,7 @@ class SIFA:
         self._num_cls = int(config['num_cls'])
 
         self.base_fd = BASE_FID
-        self.test_fid = BASE_FID + '/' + TESTFILE_FID
+        self.test_fid = TESTFILE_FID
 
     def model_setup(self):
 
@@ -117,7 +123,8 @@ class SIFA:
 
         my_list = []
         for _item in _list:
-            my_list.append(self.base_fd + '/' + _item.split('\n')[0])
+            # my_list.append(self.base_fd + '/' + _item.split('\n')[0]) # 绝对目录
+            my_list.append(_item.split('\n')[0])    # 相对目录
         return my_list
 
     def label_decomp(self, label_batch):
@@ -144,7 +151,13 @@ class SIFA:
 
         test_list = self.read_lists(self.test_fid)
 
-        with tf.Session() as sess:
+        # eval时，为了存图，限制一下GPU使用量
+        ############原始代码#############
+        # with tf.Session() as sess:
+        ################################
+        gpu_config = tf.GPUOptions(allow_growth=True)
+        with tf.Session(config=tf.ConfigProto(gpu_options=gpu_config)) as sess:
+        ################################
             sess.run(init)
 
             saver.restore(sess, self.checkpoint_pth)
@@ -158,7 +171,7 @@ class SIFA:
 
                 # This is to make the orientation of test data match with the training data
                 # Set to False if the orientation of test data has already been aligned with the training data
-                if True:
+                if False:  # 我的数据处理过程中训练集和测试集的方向是一致的，无需进行翻转
                     data = np.flip(data, axis=0)
                     data = np.flip(data, axis=1)
                     label = np.flip(label, axis=0)
@@ -171,17 +184,44 @@ class SIFA:
                     data_batch = np.zeros([self.batch_size, data_size[0], data_size[1], data_size[2]])
                     label_batch = np.zeros([self.batch_size, label_size[0], label_size[1]])
                     for idx, jj in enumerate(frame_list[ii * self.batch_size: (ii + 1) * self.batch_size]):
-                        data_batch[idx, ...] = np.expand_dims(data[..., jj].copy(), 2) # 3应改为2
+                        data_batch[idx, ...] = np.expand_dims(data[..., jj].copy(), 2)  ###3改成2
                         label_batch[idx, ...] = label[..., jj].copy()
                     label_batch = self.label_decomp(label_batch)
-                    if TEST_MODALITY=='CT':
-                        if USE_newstat:
-                            data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -2.8), np.subtract(3.2, -2.8)), 2.0),1) # {-2.8, 3.2} need to be changed according to the data statistics
-                        else:
-                            data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -1.9), np.subtract(3.0, -1.9)), 2.0),1) # {-1.9, 3.0} need to be changed according to the data statistics
-                            
-                    elif TEST_MODALITY=='MR':
-                        data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -1.8), np.subtract(4.4, -1.8)), 2.0),1)  # {-1.8, 4.4} need to be changed according to the data statistics
+
+                    ############################################################
+                    # 原始SIFA文件设置: using Cardiac set
+                    # if TEST_MODALITY=='CT':
+                    #     if USE_newstat:
+                    #         data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -2.8), np.subtract(3.2, -2.8)), 2.0),1) # {-2.8, 3.2} need to be changed according to the data statistics
+                    #     else:
+                    #         data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -1.9), np.subtract(3.0, -1.9)), 2.0),1) # {-1.9, 3.0} need to be changed according to the data statistics
+                    # elif TEST_MODALITY=='MR':
+                    #     data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -1.8), np.subtract(4.4, -1.8)), 2.0),1)  # {-1.8, 4.4} need to be changed according to the data statistics
+                    ############################################################
+                    ############################################################
+                    # prostate 数据集相关最值参数设置
+                    # A: {-3.1, 4.2}
+                    # B: {-3.0, 3.8}
+                    # C: {-3.2, 4.3}
+                    # D: {-3.0, 4.1}
+                    # E: {-3.8, 6.3}
+                    # F: {-3.4, 4.9}
+                    ############################################################
+                    if TEST_MODALITY == 'A':
+                        data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -3.1), np.subtract(4.2, -3.1)), 2.0), 1)
+                    elif TEST_MODALITY == 'B':
+                        data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -3.0), np.subtract(3.8, -3.0)), 2.0), 1)
+                    elif TEST_MODALITY == 'C':
+                        data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -3.2), np.subtract(4.3, -3.2)), 2.0), 1)
+                    elif TEST_MODALITY == 'D':
+                        data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -3.0), np.subtract(4.1, -3.0)), 2.0), 1)
+                    elif TEST_MODALITY == 'E':
+                        data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -3.8), np.subtract(6.3, -3.8)), 2.0), 1)
+                    elif TEST_MODALITY == 'F':
+                        data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -3.4), np.subtract(4.9, -3.4)), 2.0), 1)
+                    else:
+                        raise NameError('Unexpected test modality. It should an alphabet in A-F.')
+                    ############################################################
 
                     compact_pred_b_val = sess.run(self.compact_pred_b, feed_dict={self.input_b: data_batch, self.gt_b: label_batch})
 
@@ -198,28 +238,31 @@ class SIFA:
                     dice_list.append(mmb.dc(pred_test_data_tr, pred_gt_data_tr))
                     assd_list.append(mmb.assd(pred_test_data_tr, pred_gt_data_tr))
 
-            dice_arr = 100 * np.reshape(dice_list, [4, -1]).transpose()
+            # dice_arr = 100 * np.reshape(dice_list, [4, -1]).transpose()
+            dice_arr = 100 * np.reshape(dice_list, [1, -1]).transpose() # prostate 共两类
 
             dice_mean = np.mean(dice_arr, axis=1)
             dice_std = np.std(dice_arr, axis=1)
 
             print('Dice:')
-            print('AA :%.1f(%.1f)' % (dice_mean[3], dice_std[3]))
-            print('LAC:%.1f(%.1f)' % (dice_mean[1], dice_std[1]))
-            print('LVC:%.1f(%.1f)' % (dice_mean[2], dice_std[2]))
-            print('Myo:%.1f(%.1f)' % (dice_mean[0], dice_std[0]))
+            print('Prostate:%.1f(%.1f)' % (dice_mean[0], dice_std[0]))
+            # print('AA :%.1f(%.1f)' % (dice_mean[3], dice_std[3]))
+            # print('LAC:%.1f(%.1f)' % (dice_mean[1], dice_std[1]))
+            # print('LVC:%.1f(%.1f)' % (dice_mean[2], dice_std[2]))
+            # print('Myo:%.1f(%.1f)' % (dice_mean[0], dice_std[0]))
             print('Mean:%.1f' % np.mean(dice_mean))
 
-            assd_arr = np.reshape(assd_list, [4, -1]).transpose()
+            # assd_arr = np.reshape(assd_list, [4, -1]).transpose()
+            assd_arr = np.reshape(assd_list, [1, -1]).transpose()   # prostate 共两类
 
             assd_mean = np.mean(assd_arr, axis=1)
             assd_std = np.std(assd_arr, axis=1)
 
             print('ASSD:')
-            print('AA :%.1f(%.1f)' % (assd_mean[3], assd_std[3]))
-            print('LAC:%.1f(%.1f)' % (assd_mean[1], assd_std[1]))
-            print('LVC:%.1f(%.1f)' % (assd_mean[2], assd_std[2]))
-            print('Myo:%.1f(%.1f)' % (assd_mean[0], assd_std[0]))
+            # print('AA :%.1f(%.1f)' % (assd_mean[3], assd_std[3]))
+            # print('LAC:%.1f(%.1f)' % (assd_mean[1], assd_std[1]))
+            # print('LVC:%.1f(%.1f)' % (assd_mean[2], assd_std[2]))
+            # print('Myo:%.1f(%.1f)' % (assd_mean[0], assd_std[0]))
             print('Mean:%.1f' % np.mean(assd_mean))
 
 

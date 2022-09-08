@@ -160,3 +160,5 @@ data/*
 output/*
 # 把命令行输出映射的到log文件夹中，无需git控制
 log/*
+# evaluation做visualization的时候使用的测试图片存放的文件夹，无需git控制
+visualization/*
