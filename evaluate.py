@@ -11,18 +11,21 @@ from stats_func import *
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0' # in local file, this is not useful
 
-CHECKPOINT_PATH = './output/20220730-192308/sifa-15199' # model path
+CHECKPOINT_PATH = './output/yyyymmdd-hhmmss/xxx' # model path
 BASE_FID = '' # folder path of test files
-TESTFILE_FID = './data/prostate/datalist/data_prostate_testing_E.txt' # path of the .txt file storing the test filenames
-TEST_MODALITY = 'E' # the modality name you want to be tested
-# USE_newstat = True     # 默认是True
+TESTFILE_FID = './data/prostate/datalist/xxx.txt' # path of the .txt file storing the test filenames
+########################## Prostate modality options ##########################
+# A B C D E F
+###############################################################################
+TEST_MODALITY = ' ' # the modality name you want to be tested
 KEEP_RATE = 1.0
 IS_TRAINING = False
-BATCH_SIZE = 30 # 默认是128
+BATCH_SIZE = 30 # Batch size is based on how many batches (i.e. 3xBATCH_SIZE) in your each test case
 
 data_size = [256, 256, 1]
 label_size = [256, 256, 1]
 
+#### prostate 二分类的图片 ####
 contour_map = {
     'bg': 0,
     'prostate': 1,

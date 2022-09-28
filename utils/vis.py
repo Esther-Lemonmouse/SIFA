@@ -6,7 +6,21 @@
 @Author     Shuxin Yao
 @Email      yaosx_job@outlook.com
 @CreateTime 2022/07/22
-@Function   please provide a brief discription here
+@Function   输入一组numpy格式的分割结果 (来自evaluation和ground truth)，获取可视化结果。
+
+获取分割结果的方法 (需使用evaluate.py)：
+1. 使用debug模式在以下代码处添加断点：
+  约line234处: 
+    for c in range(1, self._num_cls):
+                    pred_test_data_tr = tmp_pred.copy()
+                    pred_test_data_tr[pred_test_data_tr != c] = 0   # 模型预测结果，仅含有当前类别 (即c类) 的分割标签，其他部分修改为0
+
+                    pred_gt_data_tr = label.copy()
+                    pred_gt_data_tr[pred_gt_data_tr != c] = 0   # ground truth仅含对应类别的分割结果
+
+2. 使用np.savez()方法，将分割结果保存为'[DOMAIN]_[CASE_NUMBER].npy'
+
+3. 修改MODALITY的值，注意要让名称匹配[source2target]的模式
 """
 import os
 import cv2
