@@ -11,24 +11,27 @@ from stats_func import *
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0' # in local file, this is not useful
 
-CHECKPOINT_PATH = './output/yyyymmdd-hhmmss/xxx' # model path
+CHECKPOINT_PATH = './output/20220928-175631/sifa-399' # model path
 BASE_FID = '' # folder path of test files
-TESTFILE_FID = './data/prostate/datalist/xxx.txt' # path of the .txt file storing the test filenames
-########################## Prostate modality options ##########################
-# A B C D E F
+TESTFILE_FID = './data/brats2018/datalist/data_brats2018_testing_t1ce.txt' # path of the .txt file storing the test filenames
+########################## BraTS modality options ##########################
+# t1 t1ce t2 flair
 ###############################################################################
-TEST_MODALITY = ' ' # the modality name you want to be tested
+TEST_MODALITY = 't1ce' # the modality name you want to be tested
 KEEP_RATE = 1.0
 IS_TRAINING = False
-BATCH_SIZE = 30 # Batch size is based on how many batches (i.e. 3xBATCH_SIZE) in your each test case
+BATCH_SIZE = 150 # Batch size is based on how many batches (i.e. 3xBATCH_SIZE) in your each test case
 
 data_size = [256, 256, 1]
 label_size = [256, 256, 1]
 
-#### prostate 二分类的图片 ####
+#### brats 四分类的图片 ####
+# N.B. 原始分割的ET
 contour_map = {
     'bg': 0,
-    'prostate': 1,
+    'NCR': 1,
+    'ED': 2,
+    'ET': 3,
     }
 
 #### original cardiac ####
@@ -202,26 +205,14 @@ class SIFA:
                     #     data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -1.8), np.subtract(4.4, -1.8)), 2.0),1)  # {-1.8, 4.4} need to be changed according to the data statistics
                     ############################################################
                     ############################################################
-                    # prostate 数据集相关最值参数设置
-                    # A: {-3.1, 4.2}
-                    # B: {-3.0, 3.8}
-                    # C: {-3.2, 4.3}
-                    # D: {-3.0, 4.1}
-                    # E: {-3.8, 6.3}
-                    # F: {-3.4, 4.9}
+                    # brats2018 数据集相关最值参数设置
+                    # t1: {-10.4, 17.9}
+                    # t1ce: {-11.9, 19.9}
                     ############################################################
-                    if TEST_MODALITY == 'A':
-                        data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -3.1), np.subtract(4.2, -3.1)), 2.0), 1)
-                    elif TEST_MODALITY == 'B':
-                        data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -3.0), np.subtract(3.8, -3.0)), 2.0), 1)
-                    elif TEST_MODALITY == 'C':
-                        data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -3.2), np.subtract(4.3, -3.2)), 2.0), 1)
-                    elif TEST_MODALITY == 'D':
-                        data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -3.0), np.subtract(4.1, -3.0)), 2.0), 1)
-                    elif TEST_MODALITY == 'E':
-                        data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -3.8), np.subtract(6.3, -3.8)), 2.0), 1)
-                    elif TEST_MODALITY == 'F':
-                        data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -3.4), np.subtract(4.9, -3.4)), 2.0), 1)
+                    if TEST_MODALITY == 't1':
+                        data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -10.4), np.subtract(17.9, -10.4)), 2.0), 1)
+                    elif TEST_MODALITY == 't1ce':
+                        data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -11.9), np.subtract(19.9, -11.9)), 2.0), 1)
                     else:
                         raise NameError('Unexpected test modality. It should an alphabet in A-F.')
                     ############################################################
@@ -242,29 +233,29 @@ class SIFA:
                     assd_list.append(mmb.assd(pred_test_data_tr, pred_gt_data_tr))
 
             # dice_arr = 100 * np.reshape(dice_list, [4, -1]).transpose()
-            dice_arr = 100 * np.reshape(dice_list, [1, -1]).transpose() # prostate 共两类
+            dice_arr = 100 * np.reshape(dice_list, [3, -1]).transpose() # brats共三类
 
             dice_mean = np.mean(dice_arr, axis=1)
             dice_std = np.std(dice_arr, axis=1)
 
             print('Dice:')
-            print('Prostate:%.1f(%.1f)' % (dice_mean[0], dice_std[0]))
-            # print('AA :%.1f(%.1f)' % (dice_mean[3], dice_std[3]))
-            # print('LAC:%.1f(%.1f)' % (dice_mean[1], dice_std[1]))
+            print('NCR: %.1f(%.1f)' % (dice_mean[0], dice_std[0]))
+            print('ED: %.1f(%.1f)' % (dice_mean[1], dice_std[1]))
+            print('ET: %.1f(%.1f)' % (dice_mean[2], dice_std[2]))
             # print('LVC:%.1f(%.1f)' % (dice_mean[2], dice_std[2]))
             # print('Myo:%.1f(%.1f)' % (dice_mean[0], dice_std[0]))
             print('Mean:%.1f' % np.mean(dice_mean))
 
             # assd_arr = np.reshape(assd_list, [4, -1]).transpose()
-            assd_arr = np.reshape(assd_list, [1, -1]).transpose()   # prostate 共两类
+            assd_arr = np.reshape(assd_list, [3, -1]).transpose()   # brats2018共四类
 
             assd_mean = np.mean(assd_arr, axis=1)
             assd_std = np.std(assd_arr, axis=1)
 
             print('ASSD:')
-            # print('AA :%.1f(%.1f)' % (assd_mean[3], assd_std[3]))
-            # print('LAC:%.1f(%.1f)' % (assd_mean[1], assd_std[1]))
-            # print('LVC:%.1f(%.1f)' % (assd_mean[2], assd_std[2]))
+            print('NCR: %.1f(%.1f)' % (assd_mean[0], assd_std[0]))
+            print('ED: %.1f(%.1f)' % (assd_mean[1], assd_std[1]))
+            print('ET: %.1f(%.1f)' % (assd_mean[2], assd_std[2]))
             # print('Myo:%.1f(%.1f)' % (assd_mean[0], assd_std[0]))
             print('Mean:%.1f' % np.mean(assd_mean))
 

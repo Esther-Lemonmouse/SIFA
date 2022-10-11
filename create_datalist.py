@@ -5,9 +5,9 @@
 import os
 import numpy as np
 
-#### prostate ####
-SOURCE_DIR = './data/prostate'
-DESTINATION_DIR = './data/prostate/datalist'
+#### brats2018 ####
+SOURCE_DIR = './data/brats2018'
+DESTINATION_DIR = './data/brats2018/datalist'
 
 def make_datalist(data_fd, data_list):
     filename_all = os.listdir(data_fd)

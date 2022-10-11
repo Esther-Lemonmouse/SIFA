@@ -40,8 +40,8 @@ def _decode_samples(image_list, shuffle=False):
     label_vol = tf.slice(label_vol, [0, 0, 1], label_size)
 
     # batch_y = tf.one_hot(tf.cast(tf.squeeze(label_vol), tf.uint8), 5)   # 因为是5类所以加成了5维？不太理解为什么变成5了
-    #### Prostate (2 classes) ####
-    batch_y = tf.one_hot(tf.cast(tf.squeeze(label_vol), tf.uint8), 2)   # 2分类问题，所以改成2
+    #### brats2018 (4 classes) ####
+    batch_y = tf.one_hot(tf.cast(tf.squeeze(label_vol), tf.uint8), 4)   # 4分类问题，所以改成4
 
     return tf.expand_dims(data_vol[:, :, 1], axis=2), batch_y
 
@@ -80,39 +80,19 @@ def load_data(source_pth, target_pth, do_shuffle=True):
     #     image_j = tf.subtract(tf.multiply(tf.div(tf.subtract(image_j, -1.8), tf.subtract(4.4, -1.8)), 2.0), 1)
     ############################################################################
     ############################################################################
-    # prostate 数据集相关最值参数设置
-    # A: {-3.1, 4.2}
-    # B: {-3.0, 3.8}
-    # C: {-3.2, 4.3}
-    # D: {-3.0, 4.1}
-    # E: {-3.8, 6.3}
-    # F: {-3.4, 4.9}
+    # brats 数据集相关最值参数设置
+    # t1: {-10.4, 17.9}
+    # t1ce: {-11.9, 19.9}
     ############################################################################
-    if 'A' in source_pth:
-        image_i = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -3.1), tf.subtract(4.2, -3.1)), 2.0), 1)
-    elif 'B' in source_pth:
-        image_i = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -3.0), tf.subtract(3.8, -3.0)), 2.0), 1)
-    elif 'C' in source_pth:
-        image_i = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -3.2), tf.subtract(4.3, -3.2)), 2.0), 1)
-    elif 'D' in source_pth:
-        image_i = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -3.0), tf.subtract(4.1, -3.0)), 2.0), 1)
-    elif 'E' in source_pth:
-        image_i = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -3.8), tf.subtract(6.3, -3.8)), 2.0), 1)
-    elif 'F' in source_pth:
-        image_i = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -3.4), tf.subtract(4.9, -3.4)), 2.0), 1)
+    if 't1ce' in source_pth:
+        image_i = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -11.9), tf.subtract(19.9, -11.9)), 2.0), 1)
+    elif 't1' in source_pth:
+        image_i = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -10.4), tf.subtract(17.9, -10.4)), 2.0), 1)
 
-    if 'A' in target_pth:
-        image_j = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -3.1), tf.subtract(4.2, -3.1)), 2.0), 1)
-    elif 'B' in target_pth:
-        image_j = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -3.0), tf.subtract(3.8, -3.0)), 2.0), 1)
-    elif 'C' in target_pth:
-        image_j = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -3.2), tf.subtract(4.3, -3.2)), 2.0), 1)
-    elif 'D' in target_pth:
-        image_j = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -3.0), tf.subtract(4.1, -3.0)), 2.0), 1)
-    elif 'E' in target_pth:
-        image_j = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -3.8), tf.subtract(6.3, -3.8)), 2.0), 1)
-    elif 'F' in target_pth:
-        image_j = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -3.4), tf.subtract(4.9, -3.4)), 2.0), 1)
+    if 't1ce' in target_pth:
+        image_j = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -11.9), tf.subtract(19.9, -11.9)), 2.0), 1)
+    elif 't1' in target_pth:
+        image_j = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -10.4), tf.subtract(17.9, -10.4)), 2.0), 1)
     ############################################################################
 
     # Batch
