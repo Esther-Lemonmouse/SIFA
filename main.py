@@ -18,6 +18,8 @@ import tensorflow as tf
 import data_loader, losses, model
 from stats_func import *
 
+from mixup import mix_up_sifa
+
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 save_interval = 400     # 默认是300
@@ -54,6 +56,13 @@ class SIFA:
         self._lr_gan_decay = bool(config['lr_gan_decay'])
         self._to_restore = bool(config['to_restore'])
         self._checkpoint_dir = config['checkpoint_dir']
+
+        """
+        TODO: 数据增广添加部分
+        """
+        self._is_mixup=bool(config['is_mixup'])
+        self._mixup_alpha=config['mixup_alpha']
+        ## TO DO END ##
 
         self.fake_images_A = np.zeros(
             (self._pool_size, self._batch_size, model.IMG_HEIGHT, model.IMG_WIDTH, 1))
@@ -363,13 +372,26 @@ class SIFA:
                 cnt += 1
                 curr_lr = self._base_lr
 
-                images_i, images_j, gts_i, gts_j = sess.run(self.inputs)
+                """
+                TO DO: 加入mixup
+                """
+                if self._is_mixup:
+                    images_i1, images_j1, gts_i1, gts_j1 = sess.run(self.inputs)
+                    images_i2, images_j2, gts_i2, gts_j2 = sess.run(self.inputs)
+
+                    images_i, gts_i = mix_up_sifa(images_i1, images_i2, gts_i1, gts_i2, self._mixup_alpha)
+                    images_j, gts_j = mix_up_sifa(images_j1, images_j2, gts_j1, gts_j2, self._mixup_alpha)
+                ## TO DO END ##
+                else:
+                    images_i, images_j, gts_i, gts_j = sess.run(self.inputs)
+
                 inputs = {
                     'images_i': images_i,
                     'images_j': images_j,
                     'gts_i': gts_i,
                     'gts_j': gts_j,
                 }
+                # 验证集不需要mixup
                 images_i_val, images_j_val, gts_i_val, gts_j_val = sess.run(self.inputs_val)
                 inputs_val = {
                     'images_i_val': images_i_val,
