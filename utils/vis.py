@@ -18,15 +18,16 @@
                     pred_gt_data_tr = label.copy()
                     pred_gt_data_tr[pred_gt_data_tr != c] = 0   # ground truth仅含对应类别的分割结果
 
-2. 使用np.savez()方法，将分割结果保存为'[DOMAIN]_[CASE_NUMBER].npy'
+2. 使用np.savez()方法，将分割结果保存为'[DOMAIN]_[CASE_NUMBER].npz'。sample: np.savez('A_test_3.npz', data, gt_mask, pred_mask)
 
 3. 修改MODALITY的值，注意要让名称匹配[source2target]的模式
 """
 import os
 import cv2
 import numpy as np
+import argparse
 
-MODALITY = 'B2A'
+MODALITY = 'A2B-mixup-alpha0.2'
 
 def slice_crop(img_vol, slice_idx):
     if slice_idx >= img_vol.shape[2] or slice_idx < 0:
@@ -63,16 +64,7 @@ def save_img(img, file_pth):
     cv2.imwrite(file_pth, img)
 
 
-def relate_list_generator(filename):
-    # 注意文件命名规则：Domain编号在首位，case编号在末位
-    name_parts = filename.strip('.npz').split('_')
-    relate_list = [fn for fn in os.listdir()
-                   if fn.startswith(name_parts[0]) and name_parts[-1] in fn and fn.endswith('npy')]
-    relate_list.sort()
-    return relate_list
-
-
-def main_process(gth=False, class_num=2):
+def main_process(keywords, gth=False, class_num=2):
     os.chdir('../visualization/')
     rng = np.random.default_rng(17)
     colormap = colormap_generator(class_num, rng)
@@ -83,8 +75,6 @@ def main_process(gth=False, class_num=2):
     for target_name in target_img_list:
         target = np.load(target_name)
         target_image = target['arr_0']
-        masks_name_list = relate_list_generator(target_name)
-        # class_num = len(masks_name_list)+1
 
         slice_idx = np.floor(target_image.shape[2] / 2).astype(np.int8)
         target_image_norm = slice_crop(target_image, slice_idx)
@@ -96,16 +86,16 @@ def main_process(gth=False, class_num=2):
             target_label = slice_crop(target_label, slice_idx)
             gth_mask_image_list = []
 
-        for (mask_name, cls) in zip(masks_name_list, range(1, class_num)):
-            mask_image = slice_crop(np.load(mask_name), slice_idx)
+        for (mask_name, cls) in zip(target_img_list, range(1, class_num)):
+            mask_image = slice_crop(target['arr_2'], slice_idx)
             pred_mask_image_list.append(mask_generator(mask_image, colormap))
             if gth:
-                gth_image = target_label.copy()
-                gth_image[target_label != cls] = 0
-                gth_mask_image_list.append(mask_generator(gth_image, colormap))
+                gth_mask_image = target_label.copy()
+                gth_mask_image[gth_mask_image != cls] = 0
+                gth_mask_image_list.append(mask_generator(gth_mask_image, colormap))
 
         pred_image = image_masks_merge(target_image, pred_mask_image_list)
-        pred_name = '_'.join([target_name.strip('.npz'), 'pred', MODALITY]) + '.png'
+        pred_name = '_'.join([target_name.strip('.npz'), 'pred', keywords]) + '.png'
         save_img(pred_image, pred_name)
 
         if gth:
@@ -115,5 +105,14 @@ def main_process(gth=False, class_num=2):
 
 
 if __name__ == '__main__':
-    main_process(gth=False, class_num=2)
+    parser = argparse.ArgumentParser(description='请设置类别，关键字和是否打印gt')
+    parser.add_argument('-g', '--gth', type=bool, default=False, help='是否打印gt, default is False')
+    parser.add_argument('-c', '--classes', type=int, default=2, required=True, help='必须设置类别')
+    parser.add_argument('-k', '--keywords', default=MODALITY, help='生成图片的关键字')
+    args = parser.parse_args()
+    gth = args.gth
+    classes = args.classes
+    keywords = args.keywords
+
+    main_process(keywords, gth, classes)
     print('Done')
