@@ -20,7 +20,7 @@ from stats_func import *
 
 from mixup import mix_up_sifa
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 
 save_interval = 400     # 默认是300
 evaluation_interval = 10
@@ -375,15 +375,18 @@ class SIFA:
                 """
                 TO DO: 加入mixup
                 """
+                # if self._is_mixup:
+                #     images_i1, images_j1, gts_i1, gts_j1 = sess.run(self.inputs)
+                #     images_i2, images_j2, gts_i2, gts_j2 = sess.run(self.inputs)
+                #
+                #     images_i, gts_i = mix_up_sifa(images_i1, images_i2, gts_i1, gts_i2, self._mixup_alpha)
+                #     images_j, gts_j = mix_up_sifa(images_j1, images_j2, gts_j1, gts_j2, self._mixup_alpha)
+                # ## TO DO END ##
+                # else:
+                #     images_i, images_j, gts_i, gts_j = sess.run(self.inputs)
+                images_i, images_j, gts_i, gts_j = sess.run(self.inputs)
                 if self._is_mixup:
-                    images_i1, images_j1, gts_i1, gts_j1 = sess.run(self.inputs)
-                    images_i2, images_j2, gts_i2, gts_j2 = sess.run(self.inputs)
-
-                    images_i, gts_i = mix_up_sifa(images_i1, images_i2, gts_i1, gts_i2, self._mixup_alpha)
-                    images_j, gts_j = mix_up_sifa(images_j1, images_j2, gts_j1, gts_j2, self._mixup_alpha)
-                ## TO DO END ##
-                else:
-                    images_i, images_j, gts_i, gts_j = sess.run(self.inputs)
+                    images_i, gts_i = mix_up_sifa(images_i, images_j, gts_i, gts_j, self._mixup_alpha)
 
                 inputs = {
                     'images_i': images_i,
