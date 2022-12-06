@@ -162,3 +162,5 @@ output/*
 log/*
 # evaluation做visualization的时候使用的测试图片存放的文件夹，无需git控制
 visualization/*
+# 归档模型也不保存，没有必要
+model_archive/*
