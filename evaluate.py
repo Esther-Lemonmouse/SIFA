@@ -279,4 +279,5 @@ def main(config_filename):
 
 
 if __name__ == '__main__':
+    print('checkpoint: {0:}\ntestfile name: {1:}'.format(CHECKPOINT_PATH, TESTFILE_FID))
     main(config_filename='./config_param.json')
