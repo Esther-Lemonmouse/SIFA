@@ -76,7 +76,7 @@ def main_process(keywords, gth=False, class_num=2):
         target = np.load(target_name)
         target_image = target['arr_0']
 
-        slice_idx = np.floor(target_image.shape[2] / 2).astype(np.int8)
+        slice_idx = np.floor(target_image.shape[2] / 2).astype(np.int16)
         target_image_norm = slice_crop(target_image, slice_idx)
         target_image = ((target_image_norm+target_image_norm.min())
                         *(255/(target_image_norm.max()-target_image_norm.min()))).astype(np.uint8)
